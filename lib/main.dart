@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'controller/count_controller.dart';
+import 'languages.dart';
 import 'second_page.dart';
 
 void main() {
   runApp(const MyApp());
+}
+
+class SecondBinding implements Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<CountController>(() => CountController());
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -11,8 +21,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'Flutter Demo',
+      locale: Get.deviceLocale,
+      fallbackLocale: const Locale('en', 'US'),
+      translations: Languages(),
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -34,10 +47,26 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       initialRoute: 'Home',
-      routes: {
-        'Home': (context) => const MyHomePage(title: 'Flutter Playground'),
-        'SecondPage': (context) => const SecondPage(),
-      },
+      // routes: {
+      //   'Home': (context) => const MyHomePage(title: 'Flutter Playground'),
+      //   'SecondPage': (context) => const SecondPage(),
+      // },
+      getPages: [
+        GetPage(name: '/', page: () => MyHomePage(title: 'greeting'.tr)),
+        GetPage(
+          name: '/second/:id', 
+          page: () => const SecondPage(), 
+          transition: Transition.leftToRight, 
+          transitionDuration: const Duration(milliseconds: 400), 
+          curve: Curves.fastOutSlowIn,
+          popGesture: false,
+          // dependency injection
+          // binding: BindingsBuilder(() {
+          //   Get.lazyPut<CountController>(() => CountController());
+          // }),
+          binding: SecondBinding()
+        ),
+      ]
       // home: const MyHomePage(title: 'Flutter Playground'),
     );
   }
@@ -121,7 +150,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               ElevatedButton(
-                child: Text('Show snackbar'),
+                child: const Text('Change language'),
+                onPressed: () => Get.updateLocale(const Locale('ko', 'KR')),
+              ),
+              ElevatedButton(
+                child: const Text('Show snackbar'),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -148,15 +181,16 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, 'SecondPage').then((value) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        duration: const Duration(milliseconds: 1000),
-                        content: Text('You are at Second page at ${DateTime.now()}'),
-                      )
-                    );
-                  });
+                onPressed: (){
+                  Get.toNamed('/second', arguments: { 'name': 'John' }, id: 1);
+                  // Navigator.pushNamed(context, 'SecondPage').then((value) {
+                  //   ScaffoldMessenger.of(context).showSnackBar(
+                  //     SnackBar(
+                  //       duration: const Duration(milliseconds: 1000),
+                  //       content: Text('You are at Second page at ${DateTime.now()}'),
+                  //     )
+                  //   );
+                  // });
                   // Navigator.push(context, 
                   //   MaterialPageRoute(
                   //     builder: (context) => const SecondPage()
